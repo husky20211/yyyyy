@@ -1,28 +1,147 @@
+<!DOCTYPE html>
 <html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Message Sender</title>
-    <style>
-        html{
-            font-size: 11px;
-        }
-        #center{
-            height: 100%;
-            font-size: 9vw;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .div{
-            max-width: 100%;
-            text-align: center;
-        }
-    </style>
-    <script src="https://d.line-scdn.net/n/liff/1.0/other/1.0.0/base_1528437031149.js"></script>
-</head>
-<body>
-    <div id="center">Please wait a little.</div>
-    <script src="https://d.line-scdn.net/liff/1.0/sdk.js"></script>
-    <script src="liff-starter.js"></script>
-</body>
+	<head>
+		<title>ตัวอย่าง Line Liff Send Message</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	</head>
+	<body>
+	 <div class="buttongroup" style="text-align: center;">
+	  <div class="buttonrow">
+		<button class="btn btn-info" id="liffLoginButton">Log in</button>
+		<button class="btn btn-danger" id="liffLogoutButton">Log out</button>
+	  </div>
+	 </div>
+
+	<form>
+	 <div class="form-group">
+	  <textarea class="form-control" id="FlexText" placeholder="ใส่ข้อความตรงนี้" style="height: 200px;font-size: 20px;"></textarea>
+	 </div>
+        </form>
+        <div class="buttongroup">
+	 <div class="buttonrow" style="text-align: center;">
+	  <button class="btn btn-success" id="flexmessagereply">ส่งข้อความ Flex</button>
+	 </div>
+        </div>
+	<script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
+		<script>
+			document.title = "ส่งข้อความ flex ตอบกลับ ไปยังเพื่อน,กลุ่ม";
+			 liff.init({
+			  liffId: "1613121112-qOL2MeXa"
+			 })
+			 .then(function () {
+			  initializeApp();
+			 });
+
+			function initializeApp() {
+			  // check if the user is logged in/out, and disable inappropriate button
+			  if (liff.isLoggedIn()) {
+			   document.getElementById('liffLoginButton').disabled = true;
+			  } else {
+			   document.getElementById('liffLogoutButton').disabled = true;
+			  }
+
+			  // login call, only when external browser is used
+			  document.getElementById('liffLoginButton').addEventListener('click', function() {
+			   if (!liff.isLoggedIn()) {
+				// set `redirectUri` to redirect the user to a URL other than the front page of your LIFF app.
+				liff.login();
+			   }
+			  });
+
+			  // logout call only when external browse
+			  document.getElementById('liffLogoutButton').addEventListener('click', function() {
+			   if (liff.isLoggedIn()) {
+				liff.logout();
+				window.location.reload();
+			   }
+			  });
+
+			  // Send Flex Message Reply
+			  document.getElementById('flexmessagereply').addEventListener('click', function () {
+			   if(sText==undefined||sText==""){
+				var sText = document.getElementById('FlexText').value;
+			   }
+			   var cContents = Box_FlexCenter(sText);
+			   //console.log(JSON.stringify(cContents));
+			   if (liff.isLoggedIn()) {
+				var groupInfo = liff.getContext();
+				var sGroupId = JSON.stringify(groupInfo);
+				console.log(sGroupId);
+				var bGroupInfo = groupInfo.squareId;
+				if (bGroupInfo != null) {
+				 liff.sendMessages([
+				  cContents
+				 ]).then(function (){
+				  liff.closeWindow();
+				 });
+				} else {
+				 if(liff.isInClient()){
+				  liff.sendMessages([
+				   cContents
+				  ]).then(function (){
+				   liff.closeWindow();
+				  });
+				 }else{
+				  if(liff.isApiAvailable('shareTargetPicker')){
+				   liff.shareTargetPicker([
+					cContents
+				   ]);
+				  }else{
+				   liff.sendMessages([
+					cContents
+				   ]).then(function (){
+					liff.closeWindow();
+				   });
+				  }
+				 }
+				}
+			   } else {
+				window.alert('Message Not Sent, Please Login');
+			   }
+			  });
+			}
+
+			function Box_Flex_Message(sText) {
+			  var FlexText = encodeURIComponent(sText);
+			  var altText = sText.substring(0,350);
+			  var sLabel = "ตอบกลับ";
+			  var sLink = "https://liff.line.me/1613121112-JNdj1MWe";
+			  return {
+			   "type": "flex",
+			   "altText": altText,
+			   "contents": {
+				"type": "bubble",
+				"body": {
+				 "type": "box",
+				 "layout": "vertical",
+				 "contents":
+				 [
+				  {
+				   "type": "text",
+				   "text": sText,
+				   "color": "#1A4876",
+				   "wrap": true
+				  },
+				  {
+					"type": "button",
+					"style": "primary",
+					"margin": "xxl",
+					"height": "sm",
+					"action":
+					{
+					  "type": "uri",
+					  "label": sLabel,
+					  "uri": sLink
+					}
+				  }
+				 ]
+				}
+			   }
+			  };
+			}
+		</script>
+	</body>
 </html>
